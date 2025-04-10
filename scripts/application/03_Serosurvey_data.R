@@ -12,7 +12,7 @@
 ################################################################################
 
 
-file_cuminf <- "./data/data_cumulative_infection_from_serosurvey.csv"
+file_cuminf <- "./data/data_cumulative_infected_from_serosurvey.csv"
 
 if(file.exists(file_cuminf)) {
   
@@ -20,15 +20,20 @@ if(file.exists(file_cuminf)) {
 
 } else {
   
-  library(haven)
-  library(survey)
+  require(haven)
+  require(survey)
   
-  pico_data <- read_sas("undisclosed_path/pico_varselection_20240326.sas7bdat") 
+  pico_data <- read_sas("undisclosed_path/pico_varselection_20250307.sas7bdat",
+                        col_select = c(dn_randomisatienr, 
+                                       starts_with("pico"), 
+                                       starts_with("region"),
+                                       starts_with("Geslacht"), 
+                                       starts_with("lftyear"), 
+                                       starts_with("Gemeentecode"), 
+                                       starts_with("inclusiedatum"))) 
   
   pico_data <- pico_data |> 
-    # omit variables testpos_r[0-9]_cat (denoting symptomatic or asymptomatic test)
-    select(!ends_with("_cat")) |> 
-    # rename cases seropositive for infection
+    # rename variables for seropositivity for infection and for weights
     rename(seropos_r1 = pico1_s1_pos_combi,
            seropos_r2 = pico2_S1_pos,
            seropos_r3 = pico3_s1_pos,
@@ -39,6 +44,7 @@ if(file.exists(file_cuminf)) {
            seropos_r8 = pico8_pos_inf,
            seropos_r9 = pico9_pos_inf,
            seropos_r10 = pico10_pos_inf,
+           seropos_r11 = pico11_pos_inf,
            weight_r1 = pico1_gewicht,
            weight_r2 = pico2_gewicht,
            weight_r3 = pico3_gewicht,
@@ -48,24 +54,23 @@ if(file.exists(file_cuminf)) {
            weight_r7 = pico7_gewicht_inf,
            weight_r8 = pico8_gewicht_inf,
            weight_r9 = pico9_gewicht_inf,
-           weight_r10 = pico10_gewicht_inf) |> 
+           weight_r10 = pico10_gewicht_inf,
+           weight_r11 = pico11_gewicht_inf) |> 
     pivot_longer(cols = matches("_r([0-9])"), 
                  names_to = c( ".value", "pico"),
                  names_sep = "_r") |> 
-    # leave out LVC participants (not part or random sample)
+    # leave out LVC (low vaccination coverage) participants (not part or random sample)
     filter(region != 6) |> 
-    filter(crf_label != "") |> 
     mutate(round = as.integer(pico)) |>  
     rename(part_id = dn_randomisatienr,
            part_gender = Geslacht,
            part_age = lftyear,
-           fillindate = algdatuminvul) |> 
+           date_inclusion = inclusiedatum,
+           municipality_code = Gemeentecode) |> 
     filter(!is.na(part_age)) |> 
-    mutate(part_age_group = cut(part_age, breaks = c(seq(0, 70, 10), Inf), include.lowest = TRUE, right = FALSE,
-                                labels = c("0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70+"))) |> 
-    select(part_id, round, part_age_group, fillindate, seropos, weight) 
-
-    
+    mutate(part_age_group = cut(part_age, breaks = parameters$age_group_breaks, include.lowest = TRUE, right = FALSE,
+                                labels = parameters$age_groups)) |> 
+    select(part_id, round, part_age_group, date_inclusion, seropos, weight, municipality_code)
   
   # Impute cumulative infection incidence: once infected, always seropos
   
@@ -74,7 +79,7 @@ if(file.exists(file_cuminf)) {
     group_by(part_id) |> 
     summarise(round_infected = min(round))
   
-  # 90 unique participants seroreverted: in 198 rounds they were seronegative
+  # 99 unique participants seroreverted: in 218 rounds they were seronegative
   # after the round they were first found infected
   pico_data |> 
     left_join(first_infected) |> 
@@ -91,17 +96,22 @@ if(file.exists(file_cuminf)) {
   # Median fill in date by round and age group
   data_rounds <- pico_data |> 
     group_by(round, part_age_group) |> 
-    reframe(date = median(fillindate, na.rm = TRUE))
+    reframe(date = median(date_inclusion, na.rm = TRUE))
   
   # Determine cumulative infection incidence by round and age group
   # with confidence intervals using survey package
   
   des <- svydesign(
-    ids = ~ part_id,
+    ids = ~ municipality_code,
     weights = ~ weight,
     data = pico_data)
   
-  serosurvey_data <- svyby(~seropos, ~part_age_group + round, des, svyciprop, vartype ="ci", method = "beta") |> 
+  serosurvey_data <- svyby(formula = ~ seropos,
+                           by = ~ part_age_group + round, 
+                           design = des, 
+                           FUN = svyciprop, 
+                           vartype ="ci", 
+                           method = "beta") |> 
     full_join(data_rounds) |> 
     rename(cuminf_mean = seropos,
            cuminf_upper = ci_u,

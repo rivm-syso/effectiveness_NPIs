@@ -7,7 +7,8 @@
 ################################################################################
 
 # read in open data
-variant_data <- read_csv2("https://data.rivm.nl/covid-19/COVID-19_varianten.csv")
+variant_data <- read_csv2("https://data.rivm.nl/covid-19/COVID-19_varianten.csv",
+                          col_select = c(Date_of_statistics_week_start, Variant_name, Variant_cases, Sample_size))
 
 variant_data <- variant_data |> 
   # samples on average taken in the middle of the week (3.5 days later than week start)

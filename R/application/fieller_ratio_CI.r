@@ -2,7 +2,7 @@
 # Fieller, EC. (1954). "Some problems in interval estimation". Journal of the Royal Statistical Society, Series B. 16 (2): 175–185. JSTOR 2984043.
 # variance matrix elements as separate arguments for vectorisation of function
 
-FiellerRatioCI <- function(a, b, varA, varB, covar, alpha = 0.05) {
+fieller_ratio_CI <- function(a, b, varA, varB, covar, alpha = 0.05) {
   
   theta <- a/b
   z <- qnorm(1-alpha/2)

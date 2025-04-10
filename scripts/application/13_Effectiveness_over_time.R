@@ -21,7 +21,7 @@ effectiveness_over_time <- estimate_effectiveness(immunity_time = immunity_over_
                                                   R_dat = R_data_movingaverage)
 
 
-# check some results
+# assess some results
 
 tmp <- effectiveness_over_time |> 
   filter(waning == "medium",

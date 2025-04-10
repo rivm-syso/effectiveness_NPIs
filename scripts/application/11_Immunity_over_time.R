@@ -9,41 +9,33 @@
 #   - omit round 1 because test was still in development
 #   - omit round 3 because fraction infected at least once decreases in some age groups 
 # - construct immunity per age group over time
-#   - calculate fraction protected by infection and vaccination (taking waning into account)
+#   - calculate fraction immune by infection and vaccination (taking waning into account)
 #   - adjust fraction of infections per age group to account for reinfections
 #   - fraction of reinfections in infections = 1 -  fraction naive/fraction susceptible
 # 
 ################################################################################
 
-case_data_to_fit <- case_data |>
-  group_by(age_group) |>
-  arrange(date) |>
-  mutate(n = rollmean(n, k = 7, fill = 0),
-         n_original = n,
-         # set cases back from symptom onset to time of infection
-         n = lead(x = n, n = incubation_period)) |> 
-  left_join(population_data)
-
 
 immunity_over_time <- tibble()
 
-for(w in c("medium", "fast", "slow")) {
+for(w in parameters$waning_scenarios) {
   for(l in c("mean", "lower", "upper")) {
     
-    print(paste("waning", w, "limit", l))
+    print(paste("waning scenario", w, "limit", l))
     
     immunity_over_time <- bind_rows(immunity_over_time,
-                               construct_infected_at_least_once(case_dat = case_data_to_fit, 
-                                                                sero_dat = serosurvey_data, 
-                                                                limit = l, 
-                                                                inc_period = incubation_period, 
-                                                                sero_delay = seropositive_delay, 
-                                                                skip_rounds = c(1, 3)) |> 
-                                 construct_immunity(vaccination_dat = vaccination_data,
-                                                    infection_protected = profile_infection_protected[[w]],
-                                                    vaccine_protected = profile_vaccine_protected[[w]]) |> 
-                                 mutate(estimate = l,
-                                        waning = w))
+                                    construct_cumulative_infected(case_dat = case_data, 
+                                                                  serosurvey_dat = serosurvey_data,
+                                                                  population_dat = population_data,
+                                                                  limit = l, 
+                                                                  inc_period = parameters$incubation_period, 
+                                                                  sero_delay = parameters$seropositive_delay, 
+                                                                  skip_rounds = c(1, 3)) |> 
+                                      construct_immunity(vaccination_dat = vaccination_data,
+                                                         infection_immunity = profile_infection_immunity[[w]],
+                                                         vaccine_immunity = profile_vaccine_immunity[[w]]) |> 
+                                      mutate(estimate = l,
+                                             waning = w))
     
   }
 }
@@ -52,13 +44,12 @@ for(w in c("medium", "fast", "slow")) {
 immunity_over_time <- bind_rows(immunity_over_time,
                            immunity_over_time |> 
                              group_by(date, estimate, waning) |> 
-                             reframe(frac_infected = sum(frac_pop*frac_infected),
-                                     frac_infected_atleastonce = sum(frac_pop*frac_infected_atleastonce),
+                             reframe(frac_cumulative_infected = sum(frac_pop*frac_cumulative_infected),
                                      frac_vaccinated = sum(frac_pop*frac_vaccinated),
-                                     frac_inf_protected = sum(frac_pop*frac_inf_protected),
-                                     frac_vac_protected = sum(frac_pop*frac_vac_protected),
-                                     frac_protected = sum(frac_pop*frac_protected),
-                                     p_newinf = sum(frac_pop*p_newinf),
+                                     frac_inf_immune = sum(frac_pop*frac_inf_immune),
+                                     frac_vac_immune = sum(frac_pop*frac_vac_immune),
+                                     frac_immune = sum(frac_pop*frac_immune),
+                                     p_reinf = sum(frac_pop*p_reinf),
                                      p_breakthrough = sum(frac_pop*p_breakthrough),
                                      frac_pop = sum(frac_pop)) |>
                              # filter out last 2 days when not all age groups are present:
@@ -70,13 +61,12 @@ immunity_over_time <- bind_rows(immunity_over_time,
 
 # check if fractions add up to 1
 if(immunity_over_time |> 
-  mutate(frac_vac_protected_not_infected = frac_vac_protected*(1 - frac_inf_protected),
-         frac_never_vaccinated_infected = (1 - frac_vaccinated)*(1 - frac_infected_atleastonce),
-         frac_susceptible_nonnaive = (frac_infected_atleastonce - frac_inf_protected)*(1 - frac_vac_protected) + (1 - frac_infected_atleastonce)*(frac_vaccinated - frac_vac_protected)) |> 
-  select(date, age_group, frac_inf_protected, frac_vac_protected_not_infected, frac_never_vaccinated_infected, frac_susceptible_nonnaive) |> 
+  mutate(frac_vac_immune_not_infected = frac_vac_immune*(1 - frac_inf_immune),
+         frac_naive = (1 - frac_vaccinated)*(1 - frac_cumulative_infected),
+         frac_susceptible_nonnaive = (frac_cumulative_infected - frac_inf_immune)*(1 - frac_vac_immune) + (1 - frac_cumulative_infected)*(frac_vaccinated - frac_vac_immune)) |> 
+  select(date, age_group, frac_inf_immune, frac_vac_immune_not_infected, frac_naive, frac_susceptible_nonnaive) |> 
   mutate(check = rowSums(across(starts_with("frac_")))) |> 
   filter(zapsmall(check) != 1) |> 
   nrow() != 0) warning("Fractions in population do not sum to 1")
   
-rm(case_data_to_fit)
 rm(l, w)

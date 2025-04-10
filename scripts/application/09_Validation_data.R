@@ -19,11 +19,11 @@ if(file.exists(file_reinf) & file.exists(file_breakthrough)) {
 } else {
 
   options(fst_threads = 4)
-  library(fst)
+  require(fst)
   
   report_date <- as.Date("2022-03-01")
   
-  dataO <- tibble(filename = list.files("undisclosed_path", full.names = TRUE)) |> 
+  dataO <- tibble(filename = list.files("undisclosed_path/", full.names = TRUE)) |> 
     filter(grepl(filename, pattern = gsub(as.character(report_date), pattern = "-", replacement = "")))  |> 
     pull(filename) |> 
     read_fst(columns = c("OSIRISNR", "ZIE1eZiekteDt", "NCOVdat1eposncov", "MELGGDOntvDt", "MELRIVMOntvDt", "EIGENAARDesc", "Herinfectie", "Vaccinatie_status_ezd_Desc")) |> 
@@ -33,72 +33,62 @@ if(file.exists(file_reinf) & file.exists(file_breakthrough)) {
   
   # median of symptom onset to positive lab result is 2 days (mean 2.78 days)
   # use this to impute date of infection
-  dataO |> 
+  median_SOtolab <- dataO |> 
     filter(NCOVdat1eposncov < as.Date("2021-12-01")) |> 
     mutate(SOtolab = as.integer(NCOVdat1eposncov - ZIE1eZiekteDt)) |> 
     filter(SOtolab >= -10, SOtolab < 20) |> 
-    summarise(median_SOtolab = median(SOtolab))
-  
-  tmp <- dataO |> 
-    mutate(#impute date of infection
-      date_inf = if_else(!is.na(ZIE1eZiekteDt),
-                         ZIE1eZiekteDt - incubation_period,
-                         NCOVdat1eposncov - incubation_period - 2),
-      week = ISOweek(date_inf),
-      # put date (for plotting) at middle of the week
-      date = ISOweek2date(paste0(week, "-4")),
-      reinfected = case_when(grepl(Herinfectie, pattern = "Ja") ~ TRUE,
-                             Herinfectie == "Nee" ~ FALSE,
-                             TRUE ~ NA),
-      vaccinated = case_when(grepl(Vaccinatie_status_ezd_Desc, pattern = "Geen") ~ FALSE,
-                                  Vaccinatie_status_ezd_Desc == "Deels" ~ TRUE,
-                                  Vaccinatie_status_ezd_Desc == "Volledig" ~ TRUE,
-                                  Vaccinatie_status_ezd_Desc == "Booster" ~ TRUE,
-                                  TRUE ~ NA))
+    pull(SOtolab) |> 
+    median()
 
-  tmp <- dataO |> 
+  dataO <- dataO |> 
     mutate(#impute date of infection
       date_inf = if_else(!is.na(ZIE1eZiekteDt),
-                         ZIE1eZiekteDt - incubation_period,
-                         NCOVdat1eposncov - incubation_period - 2),
+                         ZIE1eZiekteDt - parameters$incubation_period,
+                         NCOVdat1eposncov - parameters$incubation_period - median_SOtolab),
       week = ISOweek(date_inf),
       # put date (for plotting) at middle of the week
       date = ISOweek2date(paste0(week, "-4")),
+      # define infection type (reinfection or first infection)
       reinfected = case_when(grepl(Herinfectie, pattern = "Ja") ~ 1,
                              Herinfectie == "Nee" ~ 0,
                              TRUE ~ NA_real_),
+      # weigh vaccination status none/partly/vaccinated as 0/0.5/1
       vaccinated = case_when(grepl(Vaccinatie_status_ezd_Desc, pattern = "Geen") ~ 0,
                              Vaccinatie_status_ezd_Desc == "Deels" ~ 0.5,
                              Vaccinatie_status_ezd_Desc == "Volledig" ~ 1,
                              Vaccinatie_status_ezd_Desc == "Booster" ~ 1,
                              TRUE ~ NA_real_))
   
-    
-  tmp |> 
-    filter(date > as.Date("2020-03-01")) |> 
-    group_by(date, reinfected) |> 
-    count() |> 
-    group_by(date) |> 
-    mutate(frac = n/sum(n)) |> 
-    ungroup() |> 
-    select(-n) |> 
-    pivot_wider(names_from = reinfected, values_from = frac, names_prefix = "reinfected_") |> 
-    write_csv(file = file_reinf)
+  # local helper function to aggregate data by infection type or vaccination status
+  # and write to file
 
-  tmp |> 
-    filter(date > as.Date("2020-03-01")) |> 
-    group_by(date, vaccinated) |> 
-    count() |>
-    group_by(date) |> 
-    mutate(frac = n/sum(n)) |> 
-    ungroup() |> 
-    select(-n) |> 
-    pivot_wider(names_from = vaccinated, values_from = frac, names_prefix = "vaccinated_") |> 
-    write_csv(file = file_breakthrough)
+  determine_validation_data <- function(dat, type, file_name) {
+
+    dat |> 
+      filter(date > as.Date("2020-03-01")) |> 
+      group_by(date, !!sym(type)) |> 
+      count() |> 
+      group_by(date) |> 
+      mutate(frac = n/sum(n)) |> 
+      ungroup() |> 
+      select(-n) |> 
+      pivot_wider(names_from = !!sym(type), values_from = frac, names_prefix = paste0(type, "_")) |> 
+      write_csv(file = file_name)
+  }
+   
+  determine_validation_data(dat = dataO,
+                            type = "reinfected",
+                            file_name = file_reinf)
+   
   
+  determine_validation_data(dat = dataO,
+                            type = "vaccinated",
+                            file_name = file_breakthrough)
+  
+
   rm(report_date)
   rm(dataO)
-  rm(tmp)
+  rm(determine_validation_data)
 
 }
 

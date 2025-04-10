@@ -6,45 +6,35 @@
 # 
 ################################################################################
 
-output_format <- "png"
-
-end_date <- as.Date("2021-10-31")
-
-waning_colors <- c("slow" = "#9ccb86",
-                   "medium" = "#009392",
-                   "fast" = "#e88471")
-
-
-immunity_colors <- c("Naive" = "#FDDBC7",
-                     "Non-naive susceptible" = "#F4A582",
-                     "Immune after vaccination" = "#4393C3",
-                     "Immune after infection" = "#2166AC")
-
-
-
-
+# show effective R (not used in manuscript)
 plot_effective_R(R_dat = R_data)
 
 # Fig 1
 plot_R0(data = R0_over_time,
-        end_plot_date = end_date) |> 
-  ggsave(filename = paste0("./figures/application/R0.", output_format), height = 3.5, width = 5, dpi = 300, bg = "white")
+        end_plot_date = parameters$end_date) |> 
+  ggsave(filename = paste0("./figures/application/R0.", parameters$output_format), height = 3.5, width = 5, dpi = 300, bg = "white")
 
 # Fig 2
 plot_serosurvey_vaccination_data(immunity_dat = immunity_over_time,
                                  serosurvey_dat = serosurvey_data,
-                                 end_plot_date = end_date) |> 
-  ggsave(filename = paste0("./figures/application/Infected_alo_vaccinated_data.", output_format), height = 5, width = 7, dpi = 300, bg = "white")
+                                 inc_period = parameters$incubation_period,
+                                 sero_delay = parameters$seropositive_delay,
+                                 end_plot_date = parameters$end_date) |> 
+  ggsave(filename = paste0("./figures/application/Infected_vaccinated_data.", parameters$output_format), height = 5, width = 7, dpi = 300, bg = "white")
 
 
 
-# Fig 3
-(plot_immunity_over_time(data = immunity_over_time,
-                        waning_rate = "medium",
-                        color_scheme = immunity_colors,
-                        end_plot_date = end_date) +
-  labs(subtitle = NULL)) |> 
-  ggsave(filename = paste0("./figures/application/Immunity_medium_waning.", output_format), height = 5, width = 7, dpi = 300, bg = "white")
+# Fig 3, S3 and S4
+
+for(w in parameters$waning_scenarios) {
+  
+  (plot_immunity_over_time(data = immunity_over_time,
+                           waning_rate = w,
+                           color_scheme = parameters$immunity_colors,
+                           end_plot_date = parameters$end_date) +
+     labs(subtitle = NULL)) |> 
+    ggsave(filename = paste0("./figures/application/Immunity_", w, "_waning.", parameters$output_format), height = 5, width = 7, dpi = 300, bg = "white")
+}
 
 
 # prepare observed data to plot with Fig. 4
@@ -69,12 +59,12 @@ observed_data <-
   mutate(trick = "to plot legend for variable with single level")
 
 # Fig 4
-(plot_fraction_of_infections(data = bind_rows("Fraction of reinfections" = immunity_over_time |> mutate(p = 1-p_newinf) |> filter(age_group == "all"),
+(plot_fraction_of_infections(data = bind_rows("Fraction of reinfections" = immunity_over_time |> mutate(p = p_reinf) |> filter(age_group == "all"),
                                               "Fraction of breakthrough infections" = immunity_over_time |> mutate(p = p_breakthrough) |> filter(age_group == "all"),
                                               .id = "type"),
                              frac = "",
-                             color_scheme = waning_colors,
-                             end_plot_date = end_date) + 
+                             color_scheme = parameters$waning_colors,
+                             end_plot_date = parameters$end_date) + 
     {if(nrow(observed_data) != 0) 
       list(new_scale_color(),
         new_scale_fill(),
@@ -100,17 +90,15 @@ observed_data <-
           strip.text = element_text(size = 8)) + 
     guides(colour = guide_legend(order = 2),
            fill = guide_legend(order = 2))) |> 
-  ggsave(filename = paste0("./figures/application/Fraction_infections_all.", output_format), height = 3, width = 6, dpi = 300, bg = "white")
+  ggsave(filename = paste0("./figures/application/Fraction_infections_all.", parameters$output_format), height = 3, width = 6, dpi = 300, bg = "white")
 
-
-rm(observed_data)
 
 # Fig 5
 
 pA <- plot_results(data = effectiveness_over_time |> mutate(trick = "to have a legend with one key"),
              what = "Rc",
-             color_scheme = waning_colors,
-             end_plot_date = end_date) +
+             color_scheme = parameters$waning_colors,
+             end_plot_date = parameters$end_date) +
   labs(y = "Reproduction number",
        fill = "Counterfactual R\nwith waning",
        col = "Counterfactual R\nwith waning") +
@@ -140,33 +128,31 @@ pB <- plot_results(data = effectiveness_over_time |>
                           eff_lower = mean(eff_lower),
                           eff_upper = mean(eff_upper)),
                  what = "eff",
-                 color_scheme = waning_colors,
-                 end_plot_date = end_date) +
+                 color_scheme = parameters$waning_colors,
+                 end_plot_date = parameters$end_date) +
   theme(legend.title = element_text(size = 10))
 
 
 pC <- plot_OxSI(OxSI_dat = OxSI_data, 
                 legend = FALSE,
                 start_plot_date = min(effectiveness_over_time$date),
-                end_plot_date = end_date) +
+                end_plot_date = parameters$end_date) +
   theme(plot.title = element_text(color = 1))
 
 
 (pA + pB + pC +  
   plot_layout(ncol = 1, heights = c(0.85, 0.85, 0.05)) +
     plot_annotation(tag_levels = list(c("A", "B", "")))) |> 
-  ggsave(filename = paste0("./figures/application/Effectiveness.", output_format), height = 9, width = 7, dpi = 300, bg = "white")
+  ggsave(filename = paste0("./figures/application/Effectiveness.", parameters$output_format), height = 9, width = 7, dpi = 300, bg = "white")
 
-
-rm(pA, pB, pC)
 
 # Fig 7
-(plot_waning_profiles(prof_infection_protected = profile_infection_protected,
-                      prof_vaccine_protected = profile_vaccine_protected,
-                      color_scheme = waning_colors) +
+(plot_waning_profiles(prof_infection_immunity = profile_infection_immunity,
+                      prof_vaccine_immunity = profile_vaccine_immunity,
+                      color_scheme = parameters$waning_colors) +
     theme(axis.title = element_text(size = 10),
           legend.title = element_text(size = 10))) |> 
-  ggsave(filename = paste0("./figures/application/Waning_profiles.", output_format), height = 3.5, width = 5, dpi = 300, bg = "white")
+  ggsave(filename = paste0("./figures/application/Waning_profiles.", parameters$output_format), height = 3.5, width = 5, dpi = 300, bg = "white")
 
 
 
@@ -175,45 +161,69 @@ rm(pA, pB, pC)
 # Fig S1
 plot_variant_fractions(variant_frac = variant_fractions,
                        variant_dat = variant_data,
-                       end_plot_date = end_date) |> 
-  ggsave(filename = paste0("./figures/application/Variant_fractions.", output_format), height = 3, width = 7, dpi = 300, bg = "white")
+                       end_plot_date = parameters$end_date) |> 
+  ggsave(filename = paste0("./figures/application/Variant_fractions.", parameters$output_format), height = 3, width = 7, dpi = 300, bg = "white")
 
 
 # Fig S2
-plot_structure(color_scheme = immunity_colors) |> 
-  ggsave(filename = paste0("./figures/application/Structure_population_immunity.", output_format), height = 4, width = 6, dpi = 300, bg = "white")
+plot_structure(color_scheme = parameters$immunity_colors) |> 
+  ggsave(filename = paste0("./figures/application/Structure_population_immunity.", parameters$output_format), height = 4, width = 6, dpi = 300, bg = "white")
 
-
-
-# Fig S3
-plot_immunity_over_time(data = immunity_over_time,
-                        waning_rate = "slow",
-                        color_scheme = immunity_colors,
-                        end_plot_date = end_date) |> 
-  ggsave(filename = paste0("./figures/application/Immunity_slow_waning.", output_format), height = 5, width = 7, dpi = 300, bg = "white")
-
-# Fig S4
-plot_immunity_over_time(data = immunity_over_time,
-                        waning_rate = "fast",
-                        color_scheme = immunity_colors,
-                        end_plot_date = end_date) |> 
-  ggsave(filename = paste0("./figures/application/Immunity_fast_waning.", output_format), height = 5, width = 7, dpi = 300, bg = "white")
 
 
 # Fig S5
-plot_fraction_of_infections(data = immunity_over_time |> mutate(p = 1- p_newinf) |> filter(date <= end_date),
+plot_fraction_of_infections(data = immunity_over_time |> mutate(p = p_reinf) |> filter(date <= parameters$end_date),
                             frac = "reinfections",
-                            color_scheme = waning_colors,
-                            end_plot_date = end_date) |> 
-  ggsave(filename = paste0("./figures/application/Fraction_reinfections.", output_format), height = 5, width = 7, dpi = 300, bg = "white")
+                            color_scheme = parameters$waning_colors,
+                            end_plot_date = parameters$end_date) |> 
+  ggsave(filename = paste0("./figures/application/Fraction_reinfections.", parameters$output_format), height = 5, width = 7, dpi = 300, bg = "white")
 
 
 # Fig S6
 plot_fraction_of_infections(data = immunity_over_time |> mutate(p = p_breakthrough),
                             frac = "breakthrough infections",
-                            color_scheme = waning_colors,
-                            end_plot_date = end_date) |> 
-  ggsave(filename = paste0("./figures/application/Fraction_breakthrough_infections.", output_format), height = 5, width = 7, dpi = 300, bg = "white")
+                            color_scheme = parameters$waning_colors,
+                            end_plot_date = parameters$end_date) |> 
+  ggsave(filename = paste0("./figures/application/Fraction_breakthrough_infections.", parameters$output_format), height = 5, width = 7, dpi = 300, bg = "white")
 
 
+# Striking image
 
+pB <- plot_results(data = effectiveness_over_time |> 
+                     filter(waning == "medium") |> 
+                     inner_join(OxSI_data) |> 
+                     group_by(period, waning) |> 
+                     mutate(eff_mean = mean(eff_mean),
+                            eff_lower = mean(eff_lower),
+                            eff_upper = mean(eff_upper)),
+                   what = "eff",
+                   color_scheme = parameters$waning_colors,
+                   end_plot_date = parameters$end_date) +
+  scale_y_continuous(expand = expansion(c(0, 0)),
+                     breaks = seq(0, 1, 0.25),
+                     labels = paste0(100*seq(0, 1, 0.25), "%")) +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt")) +
+  guides(col = "none",
+         fill = "none") +
+  labs(y = "Effectiveness of NPIs")
+
+
+pC <- plot_OxSI(OxSI_dat = OxSI_data, 
+                legend = FALSE,
+                start_plot_date = min(effectiveness_over_time$date),
+                end_plot_date = parameters$end_date) +
+  theme(#plot.title = element_text(color = 1),
+        plot.title = element_text(hjust = 0.99, vjust=0.8, color = 1, size = 10, margin=margin(t = 0, b = -20)),
+        plot.margin = margin(0, 0, 0, 0, "pt"),
+        axis.ticks.length = unit(0, "pt"),
+        legend.position = "top")
+
+
+(pC + pB +  
+    plot_layout(ncol = 1, heights = c(0.05, 0.95))
+    ) |> 
+  ggsave(filename = "./figures/application/EffectivenessNPIs_strikingimage.pdf", height = 4, width = 6, dpi = 300, bg = "white")
+
+rm(pA, pB, pC)
+rm(w)
+rm(observed_data)

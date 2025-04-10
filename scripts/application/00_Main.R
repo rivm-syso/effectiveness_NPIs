@@ -1,8 +1,29 @@
 ################################################################################
 #
 # Main script for estimating effectiveness of NPIs
+# - define global parameters that are used in multiple scripts
+# - run through scripts in order
 # 
 ################################################################################
+
+parameters = list(age_groups = c("0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70+"),
+                  age_group_breaks = c(seq(0, 70, 10), Inf),
+                  incubation_period = 5, # time between infection and symptom onset
+                  seropositive_delay = 6, # time between symptom onset and seropositive
+                  waning_scenarios = c("medium", "fast", "slow"),
+                  startR0_date = as.Date("2020-03-01"), # reference date
+                  # plotting parameters
+                  output_format = "png",
+                  end_date = as.Date("2021-10-31"),
+                  waning_colors = c("slow" = "#9ccb86",
+                                    "medium" = "#009392",
+                                    "fast" = "#e88471"),
+                  immunity_colors = c("Naive" = "#FDDBC7",
+                                      "Non-naive susceptible" = "#F4A582",
+                                      "Immune after vaccination" = "#4393C3",
+                                      "Immune after infection" = "#2166AC")
+                  
+)
 
 source("./scripts/application/01_Load_packages.R")
 source("./scripts/application/02_Population_data.R")

@@ -64,10 +64,9 @@ ggnewscale_0.4.10
 ISOweek_0.6-2
 jsonlite_1.8.8
 lubridate_1.9.3
-nnet_7.3-19
+nnet_7.3-20
 patchwork_1.2.0
 RColorBrewer_1.1-3
-readxl_1.4.3
 scales_1.3.0
 tidyverse_2.0.0
 zoo_1.8-12

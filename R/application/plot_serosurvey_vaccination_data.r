@@ -1,5 +1,7 @@
 plot_serosurvey_vaccination_data <- function(immunity_dat, 
                                              serosurvey_dat,
+                                             inc_period,
+                                             sero_delay,
                                              start_plot_date = NULL, 
                                              end_plot_date = NULL) {
   
@@ -10,18 +12,18 @@ plot_serosurvey_vaccination_data <- function(immunity_dat,
   
   immunity_dat |> 
     filter(waning == "medium") |> 
-    select(age_group, date, estimate, frac_vaccinated, frac_infected_atleastonce) |> 
+    select(age_group, date, estimate, frac_vaccinated, frac_cumulative_infected) |> 
     pivot_longer(cols = starts_with("frac"), names_to = "type", values_to = "frac", names_prefix = "frac_") |> 
     pivot_wider(names_from = estimate, values_from = frac, names_prefix = "frac_") |> 
     # shift time axis to represent moment of seropositive response (11 days after infection)
     # to compare with data in serosurvey
-    ggplot(aes(x = date + incubation_period + seropositive_delay, y = frac_mean, fill = type, col = type)) +
+    ggplot(aes(x = date + inc_period + sero_delay, y = frac_mean, fill = type, col = type)) +
     geom_ribbon(aes(ymin = frac_lower, ymax = frac_upper), 
                 alpha = 0.4, 
                 col = NA) +
     geom_line() +
-    scale_color_manual(values = c("#01689b", "#ca005d"), labels = c("Infected\nat least once", "Vaccinated"), name = NULL) +
-    scale_fill_manual(values = c("#01689b", "#ca005d"), labels = c("Infected\nat least once", "Vaccinated"), name = NULL) +
+    scale_color_manual(values = c("#01689b", "#ca005d"), labels = c("Cumulative infected", "Vaccinated"), name = NULL) +
+    scale_fill_manual(values = c("#01689b", "#ca005d"), labels = c("Cumulative infected", "Vaccinated"), name = NULL) +
     new_scale_color() +
     geom_pointrange(data = serosurvey_dat |>
                       rename(age_group = part_age_group) |>

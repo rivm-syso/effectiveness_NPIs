@@ -11,8 +11,10 @@
 ################################################################################
 
 case_data <- bind_rows(
-  read_csv2("https://data.rivm.nl/covid-19/COVID-19_casus_landelijk_tm_03102021.csv"),
-  read_csv2("https://data.rivm.nl/covid-19/COVID-19_casus_landelijk.csv"))
+  read_csv2("https://data.rivm.nl/covid-19/COVID-19_casus_landelijk_tm_03102021.csv",
+            col_select = c(Agegroup, Date_statistics_type, Date_statistics)),
+  read_csv2("https://data.rivm.nl/covid-19/COVID-19_casus_landelijk.csv",
+            col_select = c(Agegroup, Date_statistics_type, Date_statistics)))
 
 case_data <- case_data |> 
   # filter out cases with age group "<50" (n = 226) or "Unknown" (464)
@@ -28,7 +30,7 @@ case_data <- case_data |>
 
 case_data <- case_data |> 
   # add 10 days before needed to shift time series by incubation period and calculate moving average
-  full_join(expand_grid(date = min(case_data$date) - rev(1:10), 
+  full_join(expand_grid(date = min(case_data$date) - 10:1, 
                         age_group = levels(case_data$age_group),
                         n = 0)) |>
   arrange(date, age_group) |> 

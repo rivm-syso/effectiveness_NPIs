@@ -11,12 +11,12 @@ plot_immunity_over_time <- function(data,
   
   data |> 
     filter(estimate == "mean", waning == waning_rate) |> 
-    mutate(frac_vac_protected_not_infected = frac_vac_protected*(1 - frac_inf_protected),
-           frac_never_vaccinated_infected = (1 - frac_vaccinated)*(1 - frac_infected_atleastonce),
-           frac_susceptible_nonnaive = (frac_infected_atleastonce - frac_inf_protected)*(1 - frac_vac_protected) + (1 - frac_infected_atleastonce)*(frac_vaccinated - frac_vac_protected),
-           limit_1 = frac_inf_protected,
-           limit_2 = frac_inf_protected + frac_vac_protected_not_infected ,
-           limit_3 = frac_inf_protected + frac_vac_protected_not_infected + frac_susceptible_nonnaive,
+    mutate(frac_vac_immune_not_infected = frac_vac_immune*(1 - frac_inf_immune),
+           frac_naive = (1 - frac_vaccinated)*(1 - frac_cumulative_infected),
+           frac_susceptible_nonnaive = (frac_cumulative_infected - frac_inf_immune)*(1 - frac_vac_immune) + (1 - frac_cumulative_infected)*(frac_vaccinated - frac_vac_immune),
+           limit_1 = frac_inf_immune,
+           limit_2 = frac_inf_immune + frac_vac_immune_not_infected ,
+           limit_3 = frac_inf_immune + frac_vac_immune_not_infected + frac_susceptible_nonnaive,
            limit_4 = 1) |> 
     select(date, age_group, starts_with("limit")) |> 
     pivot_longer(cols = starts_with("limit"), names_to = "limit", names_prefix = "limit_", values_to = "frac_max") |> 
