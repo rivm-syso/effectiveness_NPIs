@@ -15,7 +15,7 @@ authors:
   - family-names: "Wallinga"
     given-names: "Jacco"
     affiliation: National Institute for Public Health and the Environment (RIVM), Bilthoven, the Netherlands - Leiden University Medical Center, Leiden, the Netherlands
-date-released: "2025-03-16"
+date-released: 2025-04-15
 abstract: "This repository provides code and data to estimate the effectiveness of non-pharmaceutical interventions against COVID-19 transmission in the Netherlands."
 keywords:
   - COVID-19
@@ -27,3 +27,4 @@ repository-code: >-
   https://github.com/rivm-syso/effectiveness_NPIs/
 license: EUPL-1.2
 version: 1.0.0
+doi: 10.21945/caaa4634-1862-481d-b82a-43e9a810b87b
