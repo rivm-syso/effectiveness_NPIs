@@ -21,7 +21,7 @@ if(file.exists(file_vaccination)) {
   
   require(readxl)
   
-  vaccination_data_report <- read_xlsx("undisclosed_path/tabel_vaccinatiegraad_geboortejaar_cims_coronit_20220101_1031.xlsx") |> 
+  vaccination_data_report <- read_xlsx("./data/tabel_vaccinatiegraad_geboortejaar_cims_coronit_20220101_1031.xlsx") |> 
     filter(Leeftijdsgroep != "Leeftijd onbekend") |> 
     as_tibble() |> 
     transmute(date = ISOweek2date(paste0(DateUsedForStatistics, "-7")),

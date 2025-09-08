@@ -23,7 +23,7 @@ if(file.exists(file_cuminf)) {
   require(haven)
   require(survey)
   
-  pico_data <- read_sas("undisclosed_path/pico_varselection_20250307.sas7bdat",
+  pico_data <- read_sas("/rivm/s/backerj/nCoV/pico_contacts/data/raw_data/pico_varselection_20250307.sas7bdat",
                         col_select = c(dn_randomisatienr, 
                                        starts_with("pico"), 
                                        starts_with("region"),

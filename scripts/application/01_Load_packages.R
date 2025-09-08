@@ -17,13 +17,13 @@ list.files(path = "./R/application", full.names = TRUE) |>
 
 # Load required packages with check on installed version 
 c("remotes_2.5.0",
-  "cbsodataR_1.0.1",               
+  "cbsodataR_1.1",               
   "ggnewscale_0.4.10",
   "ISOweek_0.6-2",
   "jsonlite_1.8.8",
   "lubridate_1.9.3",
   "nnet_7.3-20",
-  "patchwork_1.2.0",
+  "patchwork_1.3.0",
   "RColorBrewer_1.1-3",
   "scales_1.3.0",
   "tidyverse_2.0.0",

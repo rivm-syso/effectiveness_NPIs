@@ -12,7 +12,7 @@ plot_effective_R(R_dat = R_data)
 # Fig 1
 plot_R0(data = R0_over_time,
         end_plot_date = parameters$end_date) |> 
-  ggsave(filename = paste0("./figures/application/R0.", parameters$output_format), height = 3.5, width = 5, dpi = 300, bg = "white")
+  ggsave(filename = paste0("./figures/application/R0.", parameters$output_format), height = 3.5, width = 5.2, dpi = 450, bg = "white")
 
 # Fig 2
 plot_serosurvey_vaccination_data(immunity_dat = immunity_over_time,
@@ -20,7 +20,7 @@ plot_serosurvey_vaccination_data(immunity_dat = immunity_over_time,
                                  inc_period = parameters$incubation_period,
                                  sero_delay = parameters$seropositive_delay,
                                  end_plot_date = parameters$end_date) |> 
-  ggsave(filename = paste0("./figures/application/Infected_vaccinated_data.", parameters$output_format), height = 5, width = 7, dpi = 300, bg = "white")
+  ggsave(filename = paste0("./figures/application/Infected_vaccinated_data.", parameters$output_format), height = 5, width = 7, dpi = 450, bg = "white")
 
 
 
@@ -33,7 +33,7 @@ for(w in parameters$waning_scenarios) {
                            color_scheme = parameters$immunity_colors,
                            end_plot_date = parameters$end_date) +
      labs(subtitle = NULL)) |> 
-    ggsave(filename = paste0("./figures/application/Immunity_", w, "_waning.", parameters$output_format), height = 5, width = 7, dpi = 300, bg = "white")
+    ggsave(filename = paste0("./figures/application/Immunity_", w, "_waning.", parameters$output_format), height = 5, width = 7, dpi = 450, bg = "white")
 }
 
 
@@ -87,10 +87,12 @@ observed_data <-
     facet_wrap(facets = vars(type |> fct_rev()),
                strip.position = "left") + 
     theme(strip.placement = "outside",
-          strip.text = element_text(size = 8)) + 
+          strip.text = element_text(size = 8),
+          legend.title = element_text(size = 10),
+          legend.text = element_text(size = 8)) + 
     guides(colour = guide_legend(order = 2),
            fill = guide_legend(order = 2))) |> 
-  ggsave(filename = paste0("./figures/application/Fraction_infections_all.", parameters$output_format), height = 3, width = 6, dpi = 300, bg = "white")
+  ggsave(filename = paste0("./figures/application/Fraction_infections_all.", parameters$output_format), height = 3, width = 5.2, dpi = 450, bg = "white")
 
 
 # Fig 5
@@ -117,8 +119,8 @@ pA <- plot_results(data = effectiveness_over_time |> mutate(trick = "to have a l
   labs(fill = "Effective R",
        col = "Effective R") +
   theme(legend.box = "horizontal",
-        legend.position.inside = c(0.92, 0.97),
-        legend.title = element_text(size = 10))
+        legend.position.inside = c(0.99, 0.99),
+        legend.title = element_text(size = 9))
 
 
 pB <- plot_results(data = effectiveness_over_time |> 
@@ -130,7 +132,8 @@ pB <- plot_results(data = effectiveness_over_time |>
                  what = "eff",
                  color_scheme = parameters$waning_colors,
                  end_plot_date = parameters$end_date) +
-  theme(legend.title = element_text(size = 10))
+  theme(legend.position.inside = c(0.99, 0.99),
+        legend.title = element_text(size = 9))
 
 
 pC <- plot_OxSI(OxSI_dat = OxSI_data, 
@@ -143,7 +146,7 @@ pC <- plot_OxSI(OxSI_dat = OxSI_data,
 (pA + pB + pC +  
   plot_layout(ncol = 1, heights = c(0.85, 0.85, 0.05)) +
     plot_annotation(tag_levels = list(c("A", "B", "")))) |> 
-  ggsave(filename = paste0("./figures/application/Effectiveness.", parameters$output_format), height = 9, width = 7, dpi = 300, bg = "white")
+  ggsave(filename = paste0("./figures/application/Effectiveness.", parameters$output_format), height = 8.75, width = 7, dpi = 450, bg = "white")
 
 
 # Fig 7
@@ -152,7 +155,7 @@ pC <- plot_OxSI(OxSI_dat = OxSI_data,
                       color_scheme = parameters$waning_colors) +
     theme(axis.title = element_text(size = 10),
           legend.title = element_text(size = 10))) |> 
-  ggsave(filename = paste0("./figures/application/Waning_profiles.", parameters$output_format), height = 3.5, width = 5, dpi = 300, bg = "white")
+  ggsave(filename = paste0("./figures/application/Waning_profiles.", parameters$output_format), height = 3.5, width = 5.2, dpi = 450, bg = "white")
 
 
 
@@ -199,10 +202,12 @@ pB <- plot_results(data = effectiveness_over_time |>
                    what = "eff",
                    color_scheme = parameters$waning_colors,
                    end_plot_date = parameters$end_date) +
+  geom_hline(yintercept = 0, col = "grey") +
   scale_y_continuous(expand = expansion(c(0, 0)),
-                     breaks = seq(0, 1, 0.25),
-                     labels = paste0(100*seq(0, 1, 0.25), "%")) +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt")) +
+                     breaks = seq(-0.5, 1, 0.5),
+                     labels = paste0(100*seq(-0.5, 1, 0.5), "%")) +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"),
+        panel.grid.minor = element_blank()) +
   guides(col = "none",
          fill = "none") +
   labs(y = "Effectiveness of NPIs")
@@ -213,16 +218,16 @@ pC <- plot_OxSI(OxSI_dat = OxSI_data,
                 start_plot_date = min(effectiveness_over_time$date),
                 end_plot_date = parameters$end_date) +
   theme(#plot.title = element_text(color = 1),
-        plot.title = element_text(hjust = 0.99, vjust=0.8, color = 1, size = 10, margin=margin(t = 0, b = -20)),
-        plot.margin = margin(0, 0, 0, 0, "pt"),
-        axis.ticks.length = unit(0, "pt"),
-        legend.position = "top")
+    plot.title = element_text(hjust = 0.99, vjust=0.8, color = 1, size = 9, margin=margin(t = 0, b = -20)),
+    plot.margin = margin(0, 0, 0, 0, "pt"),
+    axis.ticks.length = unit(0, "pt"),
+    legend.position = "top")
 
 
 (pC + pB +  
     plot_layout(ncol = 1, heights = c(0.05, 0.95))
     ) |> 
-  ggsave(filename = "./figures/application/EffectivenessNPIs_strikingimage.pdf", height = 4, width = 6, dpi = 300, bg = "white")
+  ggsave(filename = "./figures/application/EffectivenessNPIs_strikingimage.pdf", height = 4, width = 6, dpi = 450, bg = "white")
 
 rm(pA, pB, pC)
 rm(w)

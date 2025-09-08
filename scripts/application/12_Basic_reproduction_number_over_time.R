@@ -20,5 +20,5 @@ variant_fractions <- determine_variant_transmissibility(variant_dat = variant_da
 R0_over_time <- determine_R0_over_time(ref_date = parameters$startR0_date,
                                        variant_frac = variant_fractions,
                                        startR0 = start_R0,
-                                       season_ratio = 1.5)
+                                       season_ratio = 1.7)
 

@@ -1,0 +1,246 @@
+---
+title: "Supplemental material ''Estimating the effectiveness of non-pharmaceutical interventions against COVID-19 transmission in the Netherlands''"
+
+author: Jantien A. Backer*^,1^, Don Klinkenberg ^1^, Fuminari Miura ^1,2^, Jacco Wallinga ^1,3^
+
+#output: html
+output:
+  bookdown::word_document2:
+    reference_docx: word-styles-reference-02.docx
+    number_sections: false
+
+bibliography: references.bib
+csl: plos-one.csl
+---
+
+^1^ National Institute of Public Health and the Environment (RIVM), Bilthoven, the Netherlands
+
+^2^ Center for Marine Environmental Studies (CMES), Ehime University, Ehime, Japan
+
+^3^ Leiden University Medical Center, Leiden, the Netherlands
+
+\* corresponding author
+
+ <!-- rmarkdown::render("./output/Report_effectiveness_R_v1.Rmd") -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  cache = FALSE,
+  comment = NA)
+
+library(tidyverse)
+library(lubridate)
+library(flextable)
+library(officer)
+
+
+```
+
+
+## S1 Estimation of relative fitness of COVID-19 variants
+
+For SARS-CoV-2 the basic reproduction number increased over time due to the emergence of new, more transmissible variants. Here, we assume that the growth advantages of all variants before the Omicron variant were completely attributable to a higher transmissibility (that is, to a higher $R_0(t)$). To estimate the transmissibility by variant, we use the genomic surveillance data that consists of numbers of randomly sampled isolates by variant per week in the Netherlands. A multinomial logistic regression model is fitted to the data to estimate the relative growth rates $\lambda_v$ for each variant $v$ relative to wildtype (i.e., $\lambda_\mathrm{wildtype} = 0$) [@Campbell_2021]. The transmissibility $F_v$ of variant $v$ is found by solving the Euler-Lotka equation [@Wallinga_2007]:
+
+$$
+F_v \int_0^\infty \exp(-\lambda_v \tau) g_v(\tau) d\tau = 1,
+$$
+
+
+with $g_v(t)$ the generation interval distribution of variant $v$. Assuming a gamma distributed generation interval with mean $\mu_v$ and shape $\alpha_v$, yields [@VanDorp_2022]:
+
+$$
+F_v = \left(1 + \frac{\lambda_v \mu_v}{\alpha_v} \right)^{\alpha_v}.
+$$
+
+We take all pre-Omicron variants to have a mean generation interval of 4 days and a shape parameter of 4 [@Klinkenberg_2024]. Finally, the overall transmissibility over time $F(t)$ is the average of the variant transmissibilities weighted to their fitted proportions $p_v(t)$ (Fig. \@ref(fig:variants)):
+
+$$
+F(t) = \sum_v F_v \ p_v(t).
+$$
+
+```{r variants, fig.width = 3, error = FALSE, echo = FALSE, include = TRUE, warning = FALSE, fig.cap="Fraction of SARS-CoV-2 variants over time from genomic surveillance data, fitted (lines) and data (points)."}
+
+knitr::include_graphics("../../figures/application/Variant_fractions.png")
+
+```
+
+## S2 Reconstruction of population immunity
+
+### S2.1 Definition of immunity classes
+
+To reconstruct the population immunity we subdivide each age group in classes depending on the infection, vaccination and immune status (Fig. \@ref(fig:structure)), where we assume that vaccination is independent of the infection status. In each age group $j$ a fraction $q_j(t)$ is infected at least once, which we infer from serological surveys, but only a fraction $\phi_{\mathrm{inf},j}(t)$ is still naturally immune. Also, a fraction $v_j(t)$ is vaccinated, which we know from vaccination data of the primary series, but only a fraction $\phi_{\mathrm{vac},j}(t)$ is still immune due to vaccination. 
+
+
+```{r structure, fig.width = 3, error = FALSE, echo = FALSE, include = TRUE, warning = FALSE, fig.cap="Population immunity classes for each age group of which fraction $q$ is infected at least once, $v$ vaccinated, $\\phi_\\mathrm{inf}$ immune after infection and $\\phi_\\mathrm{vac}$ immune after vaccination. The letters denote the different combinations of infection and vaccination status, of which I has in fact immunity after infection and vaccination."}
+
+knitr::include_graphics("../../figures/application/Structure_population_immunity.png")
+
+```
+
+The immune fraction $\phi_j(t)$ in age group $j$ (blue classes in Fig. \@ref(fig:structure)) is calculated by:
+
+$$
+\phi_j(t) = \phi_{\mathrm{inf},j}(t) + \phi_{\mathrm{vac},j}(t) - \phi_{\mathrm{inf},j}(t)\phi_{\mathrm{vac},j}(t).
+$$
+
+For the immune fraction in the full population $\phi(t)$ that is used to calculate the effectiveness, we take the population average of the immune fractions per age group:
+
+$$
+\phi(t) = \frac{\sum_j n_j(t)\phi_j(t)}{\sum_j n_j(t)}.
+$$
+
+For simplicity, we assume all susceptibles within the same age group are equally susceptible, and when infected they are equally infectious. In this way, the fraction of new infections that are reinfections, $p_{\mathrm{reinf},j}(t)$, is
+
+$$
+p_{\mathrm{reinf},j}(t) = \frac{q_j(t) - \phi_{\mathrm{inf},j}(t)}{1-\phi_{\mathrm{inf},j}(t)},
+$$
+
+and the fraction of new infections that are breakthrough infections, $p_{\mathrm{break},j}(t)$, is
+
+$$
+p_{\mathrm{break},j}(t) = \frac{v_j(t) - \phi_{\mathrm{vac},j}(t)}{1-\phi_{\mathrm{inf},j}(t)}.
+$$
+
+Below, we explain how we imputed the cumulative infected fractions in each age group, which assumptions we made on immunity waning, and how we calculated the immune fractions.
+
+
+### S2.2 Cumulative infected fraction 
+
+The nationwide serological Pienter-Corona survey was held every 2-6 months from April 2020 onwards [@Vos_2020]. For each participant the round in which they were first infected was determined. Only participants from the first two rounds (April 2020 and June 2020) were included, as the status of later enrolled participants was unknown. Participants were weighted by sex, age, ethnic background and degree of urbanisation to match the distribution of the general Dutch population, and the fraction of participants that was infected at least once was determined per survey round and per age group using the R-package *survey* yielding the cumulative infected fraction $Q_{j,r}$ in age group $j$ and survey round $r$ with a 95% confidence interval. This fraction reflects all naive infections that occurred up to 11 days before the round, which is the assumed period between infection and a detectable serological response.
+
+To fill in the blanks between survey rounds, we use reported case data. For each reported case the age group and a date of statistics is known. This date of statistics is either the symptom onset or the date of the test-positive result. Assuming 2 days between symptom onset and test-positive result, we construct the notified case data $C_{j}(t)$ denoting the number of cases in age group $j$ who had their (imputed) symptom onset on day $t$. We shift these time series with an incubation period of 5 days, and we take the weekly moving average to straighten out day-of-week effects, yielding the incidence $c_{j}(t)$ of notified cases as a fraction of age group size $n_j(t)$ on the day of infection $t$:
+
+$$
+c_{j}(t) = \frac{1}{7 \ n_j(t)} \sum_{k = -3}^{k = 3}C_{j}(t+5+k).
+$$
+
+The increase of the cumulative infected fraction from one survey round to the next, was caused by the cumulative true incidence between those two survey rounds shifted by 11 days. When we assume that the reporting rate in an age group is constant between two rounds, the true incidence is proportional to the observed incidence $c_{j}(t)$. We use this to calculate a scaling factor $m_j(t)$ for age group $j$ at day $t$:
+
+$$
+m_j(t) = \sum_r \frac{\left(Q_{j,r} - Q_{j,r-1}\right)\left[u(t - \theta_{j,r-1}+11) - u(t - \theta_{j,r}+11)\right]}{\sum_{\tau = \theta_{j,r-1} -10}^{\theta_{j,r} - 11}c_j(\tau)} ,
+$$
+
+with $\theta_{j,r}$ is the median date of survey round $r$ in age group $j$ and $u(x)$ defined as a step function which is 0 if $x<0$ and 1 if $x\ge0$. The resulting scaling factors are piecewise constant. In the final analysis the survey rounds 1 and 3 were omitted; the first round because the serological test was still being developed and the third round because it was too close to the second round. The cumulative infected fraction $q_j(t)$ is the cumulative scaled incidence:
+
+$$
+q_j(t) = \sum_{\tau = 0}^t c_j(\tau) \ m_j(\tau).
+$$
+
+
+### S2.3 Immunity loss due to waning
+
+We assume the following functional forms for the immunity waning profiles after infection $\pi_\mathrm{inf}(t)$ and vaccination $\pi_\mathrm{vac}(t)$:
+
+$$
+\begin{aligned}
+\pi_\mathrm{inf}(t)
+&= 0 & t < 0\\
+&= 1 & 0 \leq t < 42\\
+&= \mathrm{exp}(- \omega_\mathrm{inf} (t-42)) & t \geq 42
+\end{aligned}
+$$ 
+and 
+
+$$
+\begin{aligned}
+\pi_\mathrm{vac}(t)
+&= 0 & t < 0\\
+&= \mathrm{VE}_\mathrm{max}\left(\frac{t+14}{28}\right) & 0 \leq t < 14\\
+&= \mathrm{VE}_\mathrm{max} & 0 \leq t < 42\\
+&= \mathrm{VE}_\mathrm{max} \mathrm{exp}(- \omega_\mathrm{vac} (t-42)) & t \geq 42,
+\end{aligned}
+$$ 
+
+where $\mathrm{VE}_\mathrm{max}$ is the maximal vaccine effectiveness against infection, and $\omega_\mathrm{inf}$ and $\omega_\mathrm{vac}$ are the exponential waning rates after infection and (the second dose of) vaccination, the values of which depend on the fast, medium or slow waning scenario. These waning profiles are identical for all age groups and variants. 
+
+### S2.4 Calculation of immune fraction after vaccination
+
+The fraction $\phi_{\mathrm{vac},j}(t)$ of age group $j$ that is immune due to vaccination is found by convolution of the vaccination incidence with the vaccine immunity waning profile:
+
+$$
+\phi_{\mathrm{vac},j}(t) = \sum_{\tau < t} \left(v_j(t) - v_j(t - 1)\right)\pi_\mathrm{vac}(t-\tau),
+$$
+
+where $v_j(t)$ the vaccinated fraction in age group $j$ at time $t$. 
+
+
+### S2.5 Calculation of immune fraction after infection
+
+Calculating the immune fraction after infection can be found by convolution of the infection incidence with the infection immunity waning profile. However, the infection incidence is made up by first infections that are observed and reinfections that are not observed. The fraction of reinfections needs to be inferred. Note that we can disregard the vaccination status in this derivation, as it is independent of the infection status.
+
+We start by determining the infection pressure $\lambda_j(t)$ in age group $j$ at time $t$ in those who have never been infected before, dividing the fraction of new infections by the never infected fraction:
+
+$$
+\lambda_j(t) = \frac{q_j(t+1) - q_j(t)}{1-q_j(t)}.
+$$
+
+This infection pressure is the same for those who were infected before but who lost their immunity, because we assume that all susceptibles are equally susceptible irrespective of their infection history. We first define $\xi_j(\tau, t)$ as the fraction of infected persons in age group $j$ at time $t$ with their most recent infection at time $\tau$. At this time the susceptible fraction that has been infected before at time $\tau$ is
+
+$$
+\xi_{\mathrm{sus},j}(\tau, t) = \sum_{\tau < t} \xi_j(\tau, t)\left(1-\pi_\mathrm{inf}(t-\tau)\right),
+$$
+
+of which a fraction of $\lambda_j(t)$, the infection pressure, will be reinfected:
+
+$$
+\xi_{\mathrm{reinf},j}(\tau, t) = \lambda_j(t) \xi_{\mathrm{sus},j}(\tau, t).
+$$
+
+The infected fraction is updated for the next time step by summing the first infections and reinfections at time $t$:
+
+$$
+\xi_j(t, t+1) = q_j(t+1) - q_j(t) + \sum_{\tau < t}\xi_{\mathrm{reinf},j}(\tau, t)
+$$
+and subtracting the reinfections to account for the fact that their most recent infection time has been changed:
+
+$$
+\xi_j(\tau, t+1) = \xi_j(\tau, t) - \xi_{\mathrm{reinf},j}(\tau, t)
+$$
+
+Finally, the immune fraction is found by convolution with the infection immunity waning profile:
+
+$$
+\phi_{\mathrm{inf},j}(t) = \sum_{\tau < t} \xi_j(\tau, t)\pi_\mathrm{inf}(t-\tau).
+$$
+
+\pagebreak
+
+## S3 Reconstructed population immunity for fast and slow waning rates
+
+```{r popimmslow, error = FALSE, echo = FALSE, include = TRUE, warning = FALSE, fig.cap="Reconstructed population immunity by age group (and overall) over time (1 February 2020 - 31 October 2021), assuming slow waning rates for natural and vaccine immunity and a high vaccine effectiveness. The population is stratified in a naive class that has never been infected nor vaccinated, a class immune after infection, a class immune after vaccination and a non-naive susceptible class that lost its natural or vaccine immunity."}
+
+knitr::include_graphics("../../figures/application/Immunity_slow_waning.png")
+
+```
+
+```{r popimmfast, error = FALSE, echo = FALSE, include = TRUE, warning = FALSE, fig.cap="Reconstructed population immunity by age group (and overall) over time (1 February 2020 - 31 October 2021), assuming fast waning rates for natural and vaccine immunity  and a low vaccine effectiveness. The population is stratified in a naive class that has never been infected nor vaccinated, a class immune after infection, a class immune after vaccination and a non-naive susceptible class that lost its natural or vaccine immunity."}
+
+knitr::include_graphics("../../figures/application/Immunity_fast_waning.png")
+
+```
+
+## S4 Fraction of reinfections and breakthrough infections in new infections
+
+```{r probreinfection, fig.width = 7, error = FALSE, echo = FALSE, include = TRUE, warning = FALSE, fig.cap="Reconstructed fraction of reinfections in new infections by age group (and overall as presented in main text), assuming slow, medium or fast waning."}
+
+knitr::include_graphics("../../figures/application/Fraction_reinfections.png", rel_path = FALSE)
+
+```
+
+
+```{r probbreakthrough, fig.width = 7, error = FALSE, echo = FALSE, include = TRUE, warning = FALSE, fig.cap="Reconstructed fraction of breakthrough infections in new infections by age group (and overall as presented in main text), assuming slow, medium or fast waning."}
+
+knitr::include_graphics("../../figures/application/Fraction_breakthrough_infections.png", rel_path = FALSE)
+
+```
+
+
+\pagebreak
+# References {#references .unnumbered}
+
+<!-- the <div> places the references at this spot instead of at the end -->
+<div id="refs"></div>
+
+

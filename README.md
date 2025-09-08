@@ -1,10 +1,10 @@
 # Effectiveness of NPIs
 
-This repository contains the code developed and used for assessing the effectiveness of non-pharmaceutical interventions (NPIs) during the COVID-19 pandemic in the Netherlands. The application of this project is described in ["Estimating the effectiveness of non-pharmaceutical interventions against COVID-19 transmission in the Netherlands"](https://nolink), by [Jantien A Backer](mailto:jantien.backer@rivm.nl), Don Klinkenberg, Fuminari Miura and Jacco Wallinga. 
+This repository contains the code developed and used for assessing the effectiveness of non-pharmaceutical interventions (NPIs) during the COVID-19 pandemic in the Netherlands. The application of this project is described in ["Estimating the effectiveness of non-pharmaceutical interventions against COVID-19 transmission in the Netherlands"](https://www.medrxiv.org/content/10.1101/2025.04.14.25325804v1), by [Jantien A Backer](mailto:jantien.backer@rivm.nl), Don Klinkenberg, Fuminari Miura and Jacco Wallinga. 
 
 The repository consists of:
 
-* `articles`: markdown files of the manuscript
+* `articles`: markdown files of the manuscript and supplementary material
 
 * `data`: additional data sets for the application script
 
@@ -51,7 +51,7 @@ In the `data` folder:
 The code has been developed and runs under the RIVM R-Studio servers.
 
 ```
-R version 4.4.2 (2024-10-31) Pile of Leaves
+R version 4.5.1 (2025-06-13) Great Square Root
 Platform: x86_64-redhat-linux-gnu (64-bit)
 Running under: Red Hat Cloud Infrastructure
 ```
@@ -59,13 +59,13 @@ Running under: Red Hat Cloud Infrastructure
 Next to the R base packages, the following packages(_versions) were used
 
 ```
-cbsodataR_1.0.1
+cbsodataR_1.1
 ggnewscale_0.4.10
 ISOweek_0.6-2
 jsonlite_1.8.8
 lubridate_1.9.3
 nnet_7.3-20
-patchwork_1.2.0
+patchwork_1.3.0
 RColorBrewer_1.1-3
 scales_1.3.0
 tidyverse_2.0.0
@@ -74,7 +74,7 @@ zoo_1.8-12
 
 ## Funding
 
-This study was funded by the Ministry of Health, Welfare and Sport (VWS) in the Netherlands. The authors of this study received funding from European Union’s Horizon 2020 research and innovation programme - project ESCAPE (Grant agreement number 101095619). FM was supported by the Ministry of Education, Culture, Sports, Science and Technology, Japan (MEXT) to a project on Joint Usage/Research Center – Leading Academia in Marine and Environmental Pollution Research (LaMer). FM acknowledges fundings from Japan Society for the Promotion of Science (JSPS KAKENHI, 20J00793) and JST (JPMJPR23RA).
+This study was funded by the Ministry of Health, Welfare and Sport (VWS) in the Netherlands. FM and JW received funding from European Union’s Horizon 2020 research and innovation programme - project ESCAPE (Grant agreement number 101095619). FM was supported by the Ministry of Education, Culture, Sports, Science and Technology, Japan (MEXT) to a project on Joint Usage/Research Center – Leading Academia in Marine and Environmental Pollution Research (LaMer). FM acknowledges fundings from Japan Society for the Promotion of Science (JSPS KAKENHI, 20J00793) and JST (JPMJPR23RA).
 
 ## Feedback
 

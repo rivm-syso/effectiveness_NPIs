@@ -4,12 +4,12 @@
 # compared to winter:
 # - 0: no seasonality
 # - 20%: reported by Xu et al., 2020
-# - 33%: reported by Klinkenberg et al., 2024; used as default
+# - 41%: reported by Klinkenberg et al., 2025; used as default
 # = 42%: reported by Gavenciak et al., 2022 and Paireau et al, 2023
 # 
 ################################################################################
 
-season_parameters <- tibble(reduction = c(0, 0.2, 1/3, 0.42)) |> 
+season_parameters <- tibble(reduction = c(0, 0.2, (1.7-1)/1.7, 0.50)) |> 
   mutate(ratio = 1/(1-reduction),
          amplitude = (ratio - 1)/(ratio + 1),
          labels = paste0(round(100*reduction), "%"))
@@ -42,7 +42,8 @@ pA <- season_sensitivity |>
   labs(color = "Seasonal reduction\n(summer compared to winter)",
        fill = "Seasonal reduction\n(summer compared to winter)") +
   guides(color = guide_legend(ncol = 4),
-         fill = guide_legend(ncol = 4))
+         fill = guide_legend(ncol = 4)) +
+  theme(legend.position.inside = c(0.75, 0.25))
 
 
 pB <- plot_OxSI(OxSI_dat = OxSI_data, 
@@ -53,7 +54,7 @@ pB <- plot_OxSI(OxSI_dat = OxSI_data,
 
 (pA + pB +  
     plot_layout(ncol = 1, heights = c(0.85, 0.05)))  |> 
-  ggsave(filename = paste0("./figures/application/Effectiveness_seasonality.", parameters$output_format), height = 5, width = 7, dpi = 300, bg = "white")
+  ggsave(filename = paste0("./figures/application/Effectiveness_seasonality.", parameters$output_format), height = 5, width = 7, dpi = 450, bg = "white")
 
 rm(season_parameters)
 rm(season_sensitivity)
