@@ -1,6 +1,6 @@
 # Effectiveness of NPIs
 
-This repository contains the code developed and used for assessing the effectiveness of non-pharmaceutical interventions (NPIs) during the COVID-19 pandemic in the Netherlands. The application of this project is described in ["Estimating the effectiveness of non-pharmaceutical interventions against COVID-19 transmission in the Netherlands"](https://www.medrxiv.org/content/10.1101/2025.04.14.25325804v1), by [Jantien A Backer](mailto:jantien.backer@rivm.nl), Don Klinkenberg, Fuminari Miura and Jacco Wallinga. 
+This repository contains the code developed and used for assessing the effectiveness of non-pharmaceutical interventions (NPIs) during the COVID-19 pandemic in the Netherlands. The application of this project is described in ["Estimating the effectiveness of non-pharmaceutical interventions against COVID-19 transmission in the Netherlands"](https://doi.org/10.1371/journal.pcbi.1013502), by [Jantien A Backer](mailto:jantien.backer@rivm.nl), Don Klinkenberg, Fuminari Miura and Jacco Wallinga. 
 
 The repository consists of:
 
