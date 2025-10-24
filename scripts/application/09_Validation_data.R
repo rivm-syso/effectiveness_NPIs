@@ -23,7 +23,7 @@ if(file.exists(file_reinf) & file.exists(file_breakthrough)) {
   
   report_date <- as.Date("2022-03-01")
   
-  dataO <- tibble(filename = list.files("/rivm/r/COVID-19/Surveillance/Data/OSIRIS/Geschoond/Previous", full.names = TRUE)) |> 
+  dataO <- tibble(filename = list.files("/undisclosed_path/", full.names = TRUE)) |> 
     filter(grepl(filename, pattern = gsub(as.character(report_date), pattern = "-", replacement = "")))  |> 
     pull(filename) |> 
     read_fst(columns = c("OSIRISNR", "ZIE1eZiekteDt", "NCOVdat1eposncov", "MELGGDOntvDt", "MELRIVMOntvDt", "EIGENAARDesc", "Herinfectie", "Vaccinatie_status_ezd_Desc")) |> 

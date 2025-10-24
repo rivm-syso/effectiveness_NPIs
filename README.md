@@ -35,11 +35,11 @@ Online data sets:
 
 In the `data` folder:
 
-* Serological survey data (`data_cumulative_infection_from_serosurvey.csv`) from [RIVM](https://www.rivm.nl/pienter-corona-onderzoek): the SARS-CoV-2 serological status of a representative sample of the Dutch population in 10 survey rounds from April 2020 until May 2023. The fraction of participants that have been infected at least once is determined by age group and survey round with 95% uncertainty. The code to calculate these aggregate data is provided in the script.
+* Serological survey data (`data_cumulative_infection_from_serosurvey.csv`) from [RIVM](https://www.rivm.nl/pienter-corona-onderzoek): the SARS-CoV-2 serological status of a representative sample of the Dutch population in 10 survey rounds from April 2020 until May 2023. The fraction of participants that have been infected at least once is determined by age group and survey round with 95% uncertainty. The code to calculate these aggregate data is provided in the script, but the original data is undisclosed.
 
 * Vaccination coverage data (`data_vaccination.csv`) from [RIVM](https://www.rivm.nl/corona/actueel/vaccinatiecijfers): the vaccination coverage of finishing the primary vaccination series (i.e. after one or two vaccine doses depending on the vaccine), per day and 10-year age group, from 10 January 2021 until 2 January 2022. The code to calculate these aggregate data is provided in the script.
 
-* Validation data (`data_breakthrough_infections.csv` and `data_reinfections.csv`) from RIVM: For a part of the reported test-positive cases the vaccination status and the infection type (primary infection or reinfection) is known. The fractions of breakthrough infections and reinfections are calculated to compare with model results. The code to calculate these aggregate data is provided in the script.
+* Validation data (`data_breakthrough_infections.csv` and `data_reinfections.csv`) from RIVM: For a part of the reported test-positive cases the vaccination status and the infection type (primary infection or reinfection) is known. The fractions of breakthrough infections and reinfections are calculated to compare with model results. The code to calculate these aggregate data is provided in the script, but the original data is undisclosed.
 
 ## Usage
 
