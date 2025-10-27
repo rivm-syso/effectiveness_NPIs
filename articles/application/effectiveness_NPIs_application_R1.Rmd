@@ -5,7 +5,6 @@ author: Jantien A. Backer*^,1^, Don Klinkenberg ^1^, Fuminari Miura ^1,2^, Jacco
 
 output:
   bookdown::word_document2:
-    reference_docx: word-styles-reference-02.docx
     number_sections: false
 
 bibliography: references.bib
@@ -332,6 +331,8 @@ This study was funded by the Ministry of Health, Welfare and Sport (VWS) in the 
 
 <!-- the <div> places the references at this spot instead of at the end -->
 <div id="refs"></div>
+
+\pagebreak
 
 # Supporting information captions
 

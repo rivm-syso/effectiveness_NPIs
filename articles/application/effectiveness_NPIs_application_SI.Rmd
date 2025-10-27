@@ -6,7 +6,6 @@ author: Jantien A. Backer*^,1^, Don Klinkenberg ^1^, Fuminari Miura ^1,2^, Jacco
 #output: html
 output:
   bookdown::word_document2:
-    reference_docx: word-styles-reference-02.docx
     number_sections: false
 
 bibliography: references.bib
